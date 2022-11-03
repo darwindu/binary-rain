@@ -1,0 +1,104 @@
+apply plugin: 'maven'
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+
+version = "1.0.0"
+
+// Specify JDK version - may vary in different scenarios
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+[compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
+// In this section you declare where to find the dependencies of your project
+repositories {
+    mavenLocal()
+    maven {
+        url "http://maven.aliyun.com/nexus/content/groups/public/"
+    }
+    mavenCentral()
+}
+
+List lombok = [
+    "org.projectlombok:lombok:1.16.14"
+]
+
+
+def logger_version="2.8.2"
+List logger = [
+    "org.slf4j:jul-to-slf4j:1.7.10",
+    "org.apache.logging.log4j:log4j-api:$logger_version",
+    "org.apache.logging.log4j:log4j-core:$logger_version",
+    "org.apache.logging.log4j:log4j-slf4j-impl:$logger_version",
+    "org.apache.logging.log4j:log4j-web:$logger_version"
+]
+
+// junit test
+List junit = [
+    "junit:junit:4.12"
+]
+
+List apache_commons = [
+    "org.apache.commons:commons-lang3:3.5"
+]
+
+List jackson = [
+    "com.fasterxml.jackson.core:jackson-databind:2.9.9.2"
+]
+
+
+// In this section you declare the dependencies for your production and test code
+dependencies {
+    //compile logger, lombok, apache_commons, jackson
+    //testCompile logger, lombok, apache_commons, jackson, junit
+    
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java']
+        }
+        resources {
+            srcDirs = ['src/main/resources']
+        }
+    }
+    test {
+        java {
+            srcDirs = ['src/test/java']
+        }
+        resources {
+            srcDirs = ['src/test/resources']
+        }
+    }
+}
+
+jar {
+    destinationDir file('dist/app')
+    archiveName project.name + '-' + version + '.jar'
+    manifest {
+        attributes 'Main-Class':'org.game.binaryrain.BinaryRainServer'
+    }
+
+    exclude '**/*.xml'
+    //exclude '**/*.properties'
+
+    doLast {
+        copy {
+            from file('src/main/resources/')
+            into 'dist/conf'
+        }
+        copy {
+            from configurations.runtime
+            into 'dist/lib'
+        }
+        copy {
+            from file('scripts/')
+            into 'dist/scripts'
+        }
+        copy {
+            from file('.').listFiles().findAll { File f -> (f.name.endsWith('.bat') || f.name.endsWith('.sh') || f.name.endsWith('.env')) }
+            into 'dist'
+        }
+    }
+}
